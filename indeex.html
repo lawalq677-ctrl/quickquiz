@@ -1,0 +1,69 @@
+# AskLadder
+
+A level-by-level quiz site. Players choose an answer. You add the questions. Free floors are for ads. Paid floors take a Paystack entry fee.
+
+This folder is ready to upload to GitHub.
+
+## Files
+
+- `index.html` — the whole site
+- `hero.jpg` — header image
+- `ads.txt` — replace the publisher id after AdSense approves you
+
+Owner desk PIN is `2468`. Change it after you go live.
+
+## 1. Put it on GitHub
+
+1. Create a free account at https://github.com
+2. Click the plus icon, then **New repository**.
+3. Name it `askladder`. Leave it public. Do not add a README on GitHub — you already have one.
+4. Open the new repo. Click **Add file**, then **Upload files**.
+5. Upload `index.html`, `hero.jpg`, `README.md`, and `ads.txt`. Do not upload the zip.
+6. Click **Commit changes**.
+
+## 2. Turn on a free website link
+
+1. In the repo, open **Settings**.
+2. Open **Pages** in the left menu.
+3. Under Branch, choose `main` and `/ (root)`, then Save.
+4. Wait one or two minutes. Your link will look like `https://YOURNAME.github.io/askladder/`
+5. Send that link to players.
+
+## 3. Ads on free floors
+
+1. Create a site account at https://www.google.com/adsense
+2. Add your GitHub Pages link and wait for approval. This can take days.
+3. After approval, copy your publisher id. It looks like `ca-pub-1234567890123456`.
+4. In `index.html`, find `adsenseClient` and paste that id between the quotes.
+5. In `ads.txt`, replace `pub-0000000000000000` with your real id, without `ca-`.
+6. Upload the edited files to GitHub again.
+
+Until that id is filled in, players see a labelled ad slot, not a real ad.
+
+## 4. Paystack on paid floors
+
+1. Create an account at https://paystack.com
+2. Finish business verification before you expect live payouts.
+3. Open Settings, then API Keys. Copy the **public** key. It starts with `pk_test_` or `pk_live_`.
+4. In `index.html`, paste it into `paystackPublicKey`.
+5. Put your own email in `ownerEmail`. Paystack requires an email on each charge.
+6. Upload the edited `index.html` to GitHub again.
+
+Floor 3 is set to ₦200 and Floor 4 to ₦500. Change prices in the owner desk, or in the `price` fields inside `index.html`. Paystack charges in kobo, so ₦200 is sent as `20000`. The file already does that.
+
+Use the test key first. Switch to the live key only after a test payment works.
+
+## 5. Add your own questions
+
+1. Open the live site.
+2. Tap **Owner desk**.
+3. Enter the PIN.
+4. Add a floor, or add a question to an existing floor.
+5. Answers are separated with `|`. Example: `Abuja|Lagos|Kano|Ibadan`
+6. The correct answer number starts at 1.
+
+Questions added in the owner desk are saved in that browser only. To keep them for every player, copy them into the `SEED` list in `index.html` and upload that file again.
+
+## Important
+
+Charge players for access to the quiz. Do not advertise a cash prize pool unless you have the licence that competition requires in Nigeria.
