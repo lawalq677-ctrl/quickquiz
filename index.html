@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AskLadder</title>
+  <style>
+    body { margin:0; font-family:Arial,sans-serif; background:#07090f; color:#f6f1e7; }
+    .app { max-width:480px; margin:0 auto; padding:16px; }
+    button,input { font:inherit; }
+    button { cursor:pointer; }
+    .hero,.card { background:#121826; border:1px solid rgba(255,244,220,.12); border-radius:18px; padding:16px; margin-bottom:12px; }
+    h1,h2 { margin:0 0 8px; }
+    .muted { color:#9aa3b5; }
+    .row { display:flex; gap:8px; }
+    input { flex:1; border-radius:12px; border:1px solid rgba(255,244,220,.12); background:#0d121c; color:#fff; padding:12px; }
+    .primary { border:0; background:#e8b86d; color:#2a1c08; border-radius:12px; padding:12px 14px; font-weight:700; }
+    .level { width:100%; text-align:left; color:inherit; background:#121826; border:1px solid rgba(255,244,220,.12); border-radius:16px; padding:12px; margin-bottom:8px; }
+    .option { width:100%; text-align:left; color:inherit; background:#0d121c; border:1px solid rgba(255,244,220,.12); border-radius:12px; padding:12px; margin-bottom:8px; }
+    .option.correct { background:#134e4a; }
+    .option.wrong { background:#7f1d1d; }
+  </style>
+</head>
+<body>
+  <div class="app" id="app"></div>
+  <script>
+    const PASS = 3;
+    const LEVELS = [
+      { id:1, title:"Floor 1 · Warm up", price:0, questions:[
+        { q:"How many continents are there?", choices:["5","6","7","8"], answer:2 },
+        { q:"Which planet is called the Red Planet?", choices:["Venus","Mars","Jupiter","Mercury"], answer:1 },
+        { q:"What is the capital of France?", choices:["Lyon","Nice","Paris","Lille"], answer:2 },
+        { q:"How many hours are in a day?", choices:["12","24","36","48"], answer:1 },
+        { q:"What do bees collect to make honey?", choices:["Nectar","Dew","Sap","Pollen only"], answer:0 }
+      ]},
+      { id:2, title:"Floor 2 · Bright spark", price:0, questions:[
+        { q:"Plants take in which gas for photosynthesis?", choices:["Oxygen","Nitrogen","Carbon dioxide","Helium"], answer:2 },
+        { q:"H2O is the formula for what?", choices:["Salt","Water","Air","Gold"], answer:1 },
+        { q:"Which organ pumps blood?", choices:["Lung","Liver","Heart","Kidney"], answer:2 },
+        { q:"What pulls objects toward Earth?", choices:["Friction","Gravity","Magnetism","Heat"], answer:1 },
+        { q:"The Sun is a…", choices:["Planet","Star","Moon","Comet"], answer:1 }
+      ]},
+      { id:3, title:"Floor 3 · Nigeria and world", price:200, questions:[
+        { q:"What is the capital of Nigeria?", choices:["Lagos","Abuja","Kano","Ibadan"], answer:1 },
+        { q:"What is the largest ocean?", choices:["Atlantic","Indian","Arctic","Pacific"], answer:3 },
+        { q:"The pyramids of Giza are in…", choices:["Mexico","Egypt","Peru","Sudan"], answer:1 },
+        { q:"What is the capital of Japan?", choices:["Osaka","Kyoto","Tokyo","Seoul"], answer:2 },
+        { q:"Naira is the currency of which country?", choices:["Ghana","Kenya","Nigeria","Egypt"], answer:2 }
+      ]},
+      { id:4, title:"Floor 4 · Paid challenge", price:500, questions:[
+        { q:"Chemical symbol for gold?", choices:["Ag","Au","Gd","Go"], answer:1 },
+        { q:"Smallest prime number?", choices:["0","1","2","3"], answer:2 },
+        { q:"Who wrote Romeo and Juliet?", choices:["Dickens","Shakespeare","Austen","Homer"], answer:1 },
+        { q:"Which planet has the most confirmed moons?", choices:["Jupiter","Saturn","Neptune","Uranus"], answer:1 },
+        { q:"Capital of Australia?", choices:["Sydney","Melbourne","Canberra","Perth"], answer:2 }
+      ]}
+    ];
+    const state = JSON.parse(localStorage.getItem("askladder") || '{"name":"","unlocked":1,"best":{}}');
+    function save() { localStorage.setItem("askladder", JSON.stringify(state)); }
+    function money(n) { return "₦" + n; }
+    function home() {
+      document.getElementById("app").innerHTML = `
+        <section class="hero"><h1>AskLadder</h1><p class="muted">Answer floor by floor. Clear 3 of 5 to unlock the next floor.</p></section>
+        <div class="row"><input id="name" placeholder="Player name" value="${state.name||""}"><button class="primary" id="saveName">Enter</button></div>
+        <div id="path"></div>`;
+      document.getElementById("saveName").onclick = () => { state.name = document.getElementById("name").value.trim(); save(); home(); };
+      document.getElementById("path").innerHTML = LEVELS.map(level => {
+        const locked = level.id > state.unlocked;
+        const best = state.best[level.id];
+        return `<button class="level" data-id="${level.id}"><b>${level.title}</b><br><span class="muted">${level.price?money(level.price)+" entry":"Free"} · ${locked?"Locked":best==null?"Open":best+"/5"}</span></button>`;
+      }).join("");
+      document.querySelectorAll(".level").forEach(btn => btn.onclick = () => start(Number(btn.dataset.id)));
+    }
+    let run = null;
+    function start(id) {
+      const level = LEVELS.find(l => l.id === id);
+      if (id > state.unlocked) return alert("Clear the floor below first");
+      if (level.price && !confirm("Demo entry of " + money(level.price) + ". Continue?")) return;
+      run = { level, index:0, score:0, picked:null, missed:[] };
+      show();
+    }
+    function show() {
+      const item = run.level.questions[run.index];
+      document.getElementById("app").innerHTML = `
+        <div class="card"><button class="primary" id="back">Floors</button><h2>${run.level.title}</h2><p class="muted">Question ${run.index+1} of 5 · ${run.score} correct</p><h2>${item.q}</h2><div id="opts"></div><p id="why" class="muted"></p><button class="primary" id="next" disabled>${run.index===4?"Result":"Next"}</button></div>`;
+      document.getElementById("back").onclick = home;
+      document.getElementById("opts").innerHTML = item.choices.map((c,i) => `<button class="option" data-i="${i}">${"ABCD"[i]}. ${c}</button>`).join("");
+      document.querySelectorAll(".option").forEach(b => b.onclick = () => pick(Number(b.dataset.i)));
+      document.getElementById("next").onclick = () => { if (run.index===4) done(); else { run.index++; run.picked=null; show(); } };
+    }
+    function pick(i) {
+      if (run.picked != null) return;
+      run.picked = i;
+      const item = run.level.questions[run.index];
+      const ok = i === item.answer;
+      if (ok) run.score++; else run.missed.push(item);
+      document.querySelectorAll(".option").forEach(b => {
+        const n = Number(b.dataset.i);
+        b.disabled = true;
+        if (n === item.answer) b.classList.add("correct");
+        if (n === i && !ok) b.classList.add("wrong");
+      });
+      document.getElementById("why").textContent = ok ? "Correct." : "Answer: " + item.choices[item.answer];
+      document.getElementById("next").disabled = false;
+    }
+    function done() {
+      const passed = run.score >= PASS;
+      if ((state.best[run.level.id] || 0) < run.score) state.best[run.level.id] = run.score;
+      if (passed && run.level.id === state.unlocked && run.level.id < LEVELS.length) state.unlocked++;
+      save();
+      document.getElementById("app").innerHTML = `<div class="card"><h1>${run.score}/5</h1><p>${passed?"Floor cleared.":"Need 3 correct."}</p><button class="primary" id="home">Back</button></div>`;
+      document.getElementById("home").onclick = home;
+    }
+    home();
+  </script>
+</body>
+</html>
